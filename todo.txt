@@ -1,5 +1,0 @@
-1. Insert Blank Line After Each Game in "games.txt"
-2. Use python dict() to store Board Info: Key = Board Position [e.g. "d2"] and Value = Piece
-3. Each PGN Move is a String containing the Initial Position and the New Position. E.g. "d2d4"
-4. Use pyclips/pyswip
-5. Initialize dict() with Initial Board Template and the Default Clips/Prolog Rules for each Piece
