@@ -118,7 +118,7 @@ def main():
             except Exception as e:
                 print("Exception during While: {0}".format(str(e)), file = sys.stderr)
 
-        prolog = create_game_rules(moves, attacks)
+        # prolog = create_game_rules(moves, attacks)
 
     except Exception as e:
         print("Exception @ {0}".format(str(e)), file = sys.stderr)
