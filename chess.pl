@@ -3,67 +3,6 @@
 :- [piece_rule].
 :- [board_eval].
 
-% ***************************************************************
-%	Computer Predicates
-% ***************************************************************
-%
-
-newdepth(_Depth,hit,NewDepth) :-
-	top(X),
-	X<4,
-	NewDepth=1,!.
-newdepth(Depth,_,NewDepth) :-
-	NewDepth is Depth-1,!.	
-
-get_best(Position,Color,Depth,Alpha,Beta) :-
-	invert(Color,Op),
-	generate(Move,Color,Position,New_Position,Hit),
-	newdepth(Depth,Hit,New_Depth),
-	new_alpha_beta(Color,Alpha,New_Alpha,Beta,New_Beta),
-	evaluate(New_Position,Op,Value,_,New_Depth,New_Alpha,New_Beta),
-	compare_move(Move,Value,Color),
-	cutting(Value,Color,Alpha,Beta),
-	!,fail.
-	
-new_alpha_beta(white,Alpha,New_Alpha,Beta,Beta) :-
-	get_0(_,Value),
-	Value>Alpha,
-	New_Alpha=Value,!.
-new_alpha_beta(black,Alpha,Alpha,Beta,New_Beta) :-
-	get_0(_,Value),
-	Value<Beta,
-	New_Beta=Value,!.
-new_alpha_beta(_,Alpha,Alpha,Beta,Beta).
-	
-compare_move(_,Value,white) :-
-	get_0(_,Old),
-	Old>=Value,!.
-compare_move(_,Value,black) :-
-	get_0(_,Old),
-	Old =< Value,!.
-compare_move(Move,Value,_) :-
-	replace(Move,Value).
-
-cutting(Value,white,_,Beta) :-
-	Beta<Value.
-cutting(Value,black,Alpha,_) :-
-	Alpha>Value.
-
-evaluate(position(half_position(_,_,_,_,_,[],_),_,_) ,_,Value,move(0,0),_,_,_) :-
-	winning(black,Value),!.
-evaluate(position(_,half_position(_,_,_,_,_,[],_),_) ,_,Value,move(0,0),_,_,_) :-
-	winning(white,Value),!.
-evaluate(position(W,B,_),Color,Value,move(0,0),0,_,_) :-
-	count_halfst(W,white,X),
-	count_halfst(B,black,Y),
-	compensate(Color,Z),
-	Value is X-Y+Z,!.
-evaluate(Position,Color,Value,Move,Depth,Alpha,Beta) :-
-	worst_value(Color,Worst),
-	push(move(0,0),Worst),
-	not(get_best(Position,Color,Depth,Alpha,Beta)),
-	pull(Move,Value),!.
-	
 
 %****************************************************************
 %	Game Control Predicates
@@ -100,32 +39,20 @@ play(BasicPosition,Start) :-
 	retract(board(Position,Color)),         % read last Position status and color in action
 	( 
 		are_kings_alive(Position) ->
-		enter(Position,Color,Move),
-		make_move(Color,Position,Move,New,_),
-		draw_board(New),
-		invert(Color,Op),
-		asserta(board(New,Op)),               % store current Position status and opposite color
-		fail
-	;
-		write_winner(Position),
-		!, fail
+		write_move(Move,Color),
+		make_move(Color,Position,Move,New,_)
+		;
+		!, fail % punem aici functia care face afisarea
+
 	).
 play(_,_).
 
 king_alive(half_position(_,_,_,_,_,K,_)) :-
 	length(K,1).
 
-write_winner(Position) :-
-	write('GAME ENDED'), nl,
-	winner(Position,Winner),
-	write(Winner), write(' wins'), nl.
-
 are_kings_alive(position(W,B,_)) :-
 	king_alive(W),
 	king_alive(B).
-
-winner(position(W,_,_), white) :- king_alive(W).
-winner(position(_,B,_), black) :- king_alive(B).
 	
 %****************************************************************
 %	Board Predicates
@@ -314,24 +241,6 @@ replace([_|T], 1, X, [X|T]).
 replace([H|T], I, X, [H|R]):- I > 1, NI is I-1, replace(T, NI, X, R), !.
 replace(L, _, _, L).
 
-who_vs_who:-
-	write('Human(W) vs Human(B)      ( 1 )'),nl,
-	write('Human(W) vs Computer(B)   ( 2 )'),nl,
-	write('Computer(W) vs Human(B)   ( 3 )'),nl,
-	write('Computer(W) vs Computer(B)( 4 )'),nl,
-	get_vs(I),
-	save_color(I).
-
-get_vs(I):-
-	get(CI),	% CharI
-	I is CI - 48,
-	I > 0,I < 5,!.
-get_vs(I):- get_vs(I).
-
-save_color(1):- asserta(human(white)), assertz(human(black)),!.		
-save_color(2):- asserta(human(white)),!.
-save_color(3):- asserta(human(black)),!.	
-save_color(4).
 				
 %****************************************************************
 %	Main Predicates
@@ -353,7 +262,6 @@ run:-
 	initial_pos(Position),
 	asserta(depth(2)),
 	init_stack,
-	who_vs_who,
 	play(Position,white),	% main circulation
 	closechess.	
 			
