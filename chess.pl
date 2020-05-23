@@ -1,7 +1,6 @@
 
 :- [utils].	
 :- [piece_rule].
-:- [board_eval].
 
 
 %****************************************************************
@@ -20,12 +19,6 @@ enter(Position,Color,Move) :-
 		write('Illegal Move!'),
 		nl,fail
 	).
-enter(Position,Color,Move) :-	
-	depth(Depth),!,
-	worst_value(white,Alpha),
-	worst_value(black,Beta),
-	evaluate(Position,Color,_Value,Move,Depth,Alpha,Beta),
-	write_move(Move,Color),!.
 	
 % play: chess main loop, Start and Opposite take turns
 play(BasicPosition,Start) :-
@@ -40,7 +33,6 @@ play(BasicPosition,Start) :-
 	( 
 		are_kings_alive(Position) ->
 		write_move(Move,Color),
-		make_move(Color,Position,Move,New,_)
 		;
 		!, fail % punem aici functia care face afisarea
 
@@ -62,36 +54,12 @@ are_kings_alive(position(W,B,_)) :-
 change(Old,Color,From,To,New):-
 	get_half(Old,Half,Color),
 	exist(From,Half,Type),
-	extract(Half,Type,List),
-	remove(From,List,Templist),
-	combine(Half,Type,[To|Templist],Newhalf),
-	update_half(Old,Newhalf,Color,New).
 
 % true if there is a piece in the Field and kill it
 kill(Old,Color,Field,New):- 
 	get_half(Old,Half,Color),
 	exist(Field,Half,Type),
-	extract(Half,Type,List),
-	remove(Field,List,Newlist),
-	combine(Half,Type,Newlist,Newhalf),
-	update_half(Old,Newhalf,Color,New).
-	
-% extract: extract certain type of pieces from half position
-extract(half_position(X,_,_,_,_,_,_),pawn,X).
-extract(half_position(_,X,_,_,_,_,_),rook,X).
-extract(half_position(_,_,X,_,_,_,_),knight,X).
-extract(half_position(_,_,_,X,_,_,_),bishop,X).
-extract(half_position(_,_,_,_,X,_,_),queen,X).
-extract(half_position(_,_,_,_,_,X,_),king,X).
 
-% combine: combine new piece list with original half position
-combine(half_position(_,B,C,D,E,F,G),pawn,N,half_position(N,B,C,D,E,F,G)).
-combine(half_position(A,_,C,D,E,F,G),rook,N,half_position(A,N,C,D,E,F,G)).
-combine(half_position(A,B,_,D,E,F,G),knight,N,half_position(A,B,N,D,E,F,G)).
-combine(half_position(A,B,C,_,E,F,G),bishop,N,half_position(A,B,C,N,E,F,G)).
-combine(half_position(A,B,C,D,_,F,G),queen,N,half_position(A,B,C,D,N,F,G)).
-combine(half_position(A,B,C,D,E,_,G),king,N,half_position(A,B,C,D,E,N,G)).
-	
 %****************************************************************
 %	Move Predicates
 %****************************************************************
@@ -111,15 +79,6 @@ check_00(Old,black,85,83,New) :-
 	change(Old,black,81,84,New),!.
 check_00(Old,_,_,_,Old).
 
-% make_move: get New position from Old position and Move,
-make_move(Color,Old,move(From,To),New,hit):-
-	invert(Color,Oppo),
-	kill(Old,Oppo,To,Temp),
-	change(Temp,Color,From,To,New),!.
-make_move(Color,Old,move(From,To),New,nohit):-
-	check_00(Old,Color,From,To,Temp),
-	change(Temp,Color,From,To,New),!.
-
 % check_legal : check if Move is legal, Move e.g. from(Pos1,Pos2)
 check_legal(Move,Color,Position):-
 	generate(PosMove,Color,Position,_,_),
@@ -128,7 +87,6 @@ check_legal(Move,Color,Position):-
 % generate: move(From,To), Old: old position, Hit:
 generate(Move,Color,Old,New,Hit):-
 	all_moves(Color,Old,Move),
-	make_move(Color,Old,Move,New,Hit).
 
 
 %****************************************************************
