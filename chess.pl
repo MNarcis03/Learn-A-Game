@@ -1,16 +1,13 @@
 
 :- [utils].	
-:- [piece_rule].
-:- [board_eval].
-
+:- [piece_rule].	
 
 %****************************************************************
 %	Game Control Predicates
 %****************************************************************
 
-% enter: given Position and Color, return a Move from human or computer
+% enter: given Position and Color, return a move
 enter(Position,Color,Move) :-
-	human(Color),
 	repeat,
 	read_move(Move,Color),
 	(	
@@ -20,11 +17,7 @@ enter(Position,Color,Move) :-
 		write('Illegal Move!'),
 		nl,fail
 	).
-enter(Position,Color,Move) :-	
-	depth(Depth),!,
-	worst_value(white,Alpha),
-	worst_value(black,Beta),
-	evaluate(Position,Color,_Value,Move,Depth,Alpha,Beta),
+enter(Position,Color,Move) :-
 	write_move(Move,Color),!.
 	
 % play: chess main loop, Start and Opposite take turns
@@ -39,20 +32,32 @@ play(BasicPosition,Start) :-
 	retract(board(Position,Color)),         % read last Position status and color in action
 	( 
 		are_kings_alive(Position) ->
-		write_move(Move,Color),
-		make_move(Color,Position,Move,New,_)
-		;
-		!, fail % punem aici functia care face afisarea
-
+		enter(Position,Color,Move),
+		make_move(Color,Position,Move,New,_),
+		draw_board(New),
+		invert(Color,Op),
+		asserta(board(New,Op)),               % store current Position status and opposite color
+		fail
+	;
+		write_winner(Position),
+		!, fail
 	).
 play(_,_).
 
 king_alive(half_position(_,_,_,_,_,K,_)) :-
 	length(K,1).
 
+write_winner(Position) :-
+	write('GAME ENDED'), nl,
+	winner(Position,Winner),
+	write(Winner), write(' wins'), nl.
+
 are_kings_alive(position(W,B,_)) :-
 	king_alive(W),
 	king_alive(B).
+
+winner(position(W,_,_), white) :- king_alive(W).
+winner(position(_,B,_), black) :- king_alive(B).
 	
 %****************************************************************
 %	Board Predicates
@@ -62,35 +67,16 @@ are_kings_alive(position(W,B,_)) :-
 change(Old,Color,From,To,New):-
 	get_half(Old,Half,Color),
 	exist(From,Half,Type),
-	extract(Half,Type,List),
 	remove(From,List,Templist),
-	combine(Half,Type,[To|Templist],Newhalf),
 	update_half(Old,Newhalf,Color,New).
 
 % true if there is a piece in the Field and kill it
 kill(Old,Color,Field,New):- 
 	get_half(Old,Half,Color),
 	exist(Field,Half,Type),
-	extract(Half,Type,List),
 	remove(Field,List,Newlist),
-	combine(Half,Type,Newlist,Newhalf),
 	update_half(Old,Newhalf,Color,New).
 	
-% extract: extract certain type of pieces from half position
-extract(half_position(X,_,_,_,_,_,_),pawn,X).
-extract(half_position(_,X,_,_,_,_,_),rook,X).
-extract(half_position(_,_,X,_,_,_,_),knight,X).
-extract(half_position(_,_,_,X,_,_,_),bishop,X).
-extract(half_position(_,_,_,_,X,_,_),queen,X).
-extract(half_position(_,_,_,_,_,X,_),king,X).
-
-% combine: combine new piece list with original half position
-combine(half_position(_,B,C,D,E,F,G),pawn,N,half_position(N,B,C,D,E,F,G)).
-combine(half_position(A,_,C,D,E,F,G),rook,N,half_position(A,N,C,D,E,F,G)).
-combine(half_position(A,B,_,D,E,F,G),knight,N,half_position(A,B,N,D,E,F,G)).
-combine(half_position(A,B,C,_,E,F,G),bishop,N,half_position(A,B,C,N,E,F,G)).
-combine(half_position(A,B,C,D,_,F,G),queen,N,half_position(A,B,C,D,N,F,G)).
-combine(half_position(A,B,C,D,E,_,G),king,N,half_position(A,B,C,D,E,N,G)).
 	
 %****************************************************************
 %	Move Predicates
@@ -197,34 +183,34 @@ write_board([R1,R2,R3,R4,R5,R6,R7,R8]):-
 	write("3"),write(R3),nl,
 	write("2"),write(R2),nl,
 	write("1"),write(R1),nl,
-	write("  a b c d e f g h"),nl,nl.
+	write("  a  b  c  d  e  f  g  h"),nl,nl.
 % generate_board: generate blank board
-generate_board([[' ',' ',' ',' ',' ',' ',' ',' '],
-								[' ',' ',' ',' ',' ',' ',' ',' '],
-								[' ',' ',' ',' ',' ',' ',' ',' '],
-								[' ',' ',' ',' ',' ',' ',' ',' '],
-								[' ',' ',' ',' ',' ',' ',' ',' '],
-								[' ',' ',' ',' ',' ',' ',' ',' '],
-								[' ',' ',' ',' ',' ',' ',' ',' '],
-								[' ',' ',' ',' ',' ',' ',' ',' ']]).
+generate_board([['  ','  ','  ','  ','  ','  ','  ','  '],
+				['  ','  ','  ','  ','  ','  ','  ','  '],
+				['  ','  ','  ','  ','  ','  ','  ','  '],
+				['  ','  ','  ','  ','  ','  ','  ','  '],
+				['  ','  ','  ','  ','  ','  ','  ','  '],
+				['  ','  ','  ','  ','  ','  ','  ','  '],
+				['  ','  ','  ','  ','  ','  ','  ','  '],
+				['  ','  ','  ','  ','  ','  ','  ','  ']]).
 % place_pieces: place pieces of half side on board
 place_pieces(white,Half,Board,BoardNew):-
 	Half = half_position(Pawn,Rook,Knight,Bishop,Queen,King,_),
-	place_piece('\u265F',Pawn,Board,Board1),
-	place_piece('\u265C',Rook,Board1,Board2),
-	place_piece('\u265E',Knight,Board2,Board3),
-	place_piece('\u265D',Bishop,Board3,Board4),
-	place_piece('\u265B',Queen,Board4,Board5),
-	place_piece('\u265A',King,Board5,BoardNew),
+	place_piece('wP',Pawn,Board,Board1),
+	place_piece('wR',Rook,Board1,Board2),
+	place_piece('wN',Knight,Board2,Board3),
+	place_piece('wB',Bishop,Board3,Board4),
+	place_piece('wQ',Queen,Board4,Board5),
+	place_piece('wK',King,Board5,BoardNew),
 	!.
 place_pieces(black,Half,Board,BoardNew):-
 	Half = half_position(Pawn,Rook,Knight,Bishop,Queen,King,_),
-	place_piece('\u2659',Pawn,Board,Board1),
-	place_piece('\u2656',Rook,Board1,Board2),
-	place_piece('\u2658',Knight,Board2,Board3),
-	place_piece('\u2657',Bishop,Board3,Board4),
-	place_piece('\u2655',Queen,Board4,Board5),
-	place_piece('\u2654',King,Board5,BoardNew),
+	place_piece('bP',Pawn,Board,Board1),
+	place_piece('bR',Rook,Board1,Board2),
+	place_piece('bN',Knight,Board2,Board3),
+	place_piece('bB',Bishop,Board3,Board4),
+	place_piece('bQ',Queen,Board4,Board5),
+	place_piece('bK',King,Board5,BoardNew),
 	!.
 
 % place_piece: place all pieces of certain type
@@ -240,7 +226,6 @@ place_piece(Str,[Field|Fs],Board,BoardNew):-
 replace([_|T], 1, X, [X|T]).
 replace([H|T], I, X, [H|R]):- I > 1, NI is I-1, replace(T, NI, X, R), !.
 replace(L, _, _, L).
-
 				
 %****************************************************************
 %	Main Predicates

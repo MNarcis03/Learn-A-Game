@@ -6,7 +6,6 @@
 :- dynamic
 	stack/2,
 	top/1,
-	human/1,
 	depth/1,
 	board/2.
 
@@ -34,7 +33,18 @@ exist(Field,half_position(_,_,_,_,X,_,_),queen):-
 exist(Field,half_position(_,_,_,_,_,X,_),king):-
 	member(Field,X).
 
+% invert: between black and white
+invert(F1,F2):-
+	F1 = black,
+	F2 = white.
+invert(F1,F2):-
+	F1 = white,
+	F2 = black.
 
+% remove(Elem, List, ListNew)
+remove(X,[X|New],New):- !.
+remove(X,[A|Old],[A|New]):-
+	remove(X,Old,New).
 
 % **************************
 % Stack Predicated

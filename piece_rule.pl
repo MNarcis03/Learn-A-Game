@@ -61,7 +61,7 @@ poss_move(queen,X):-
 poss_move(king,X):-
 	poss_move(queen,X).
 	
-% pawn_move: rules of pawn's possible move		
+% pawn_move: rules of pawns possible move		
 pawn_move(From,white,Position,To):-
 	To  is  From + 9,
 	occupied(To,black,Position).
