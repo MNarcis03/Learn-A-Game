@@ -1,6 +1,11 @@
 
 :- [utils].	
+<<<<<<< HEAD
 :- [piece_rule].	
+=======
+:- [piece_rule].
+
+>>>>>>> 2d339436388d4019969597424504f7941ee349a4
 
 %****************************************************************
 %	Game Control Predicates
@@ -17,8 +22,11 @@ enter(Position,Color,Move) :-
 		write('Illegal Move!'),
 		nl,fail
 	).
+<<<<<<< HEAD
 enter(Position,Color,Move) :-
 	write_move(Move,Color),!.
+=======
+>>>>>>> 2d339436388d4019969597424504f7941ee349a4
 	
 % play: chess main loop, Start and Opposite take turns
 play(BasicPosition,Start) :-
@@ -32,6 +40,7 @@ play(BasicPosition,Start) :-
 	retract(board(Position,Color)),         % read last Position status and color in action
 	( 
 		are_kings_alive(Position) ->
+<<<<<<< HEAD
 		enter(Position,Color,Move),
 		make_move(Color,Position,Move,New,_),
 		draw_board(New),
@@ -41,6 +50,12 @@ play(BasicPosition,Start) :-
 	;
 		write_winner(Position),
 		!, fail
+=======
+		write_move(Move,Color),
+		;
+		!, fail % punem aici functia care face afisarea
+
+>>>>>>> 2d339436388d4019969597424504f7941ee349a4
 	).
 play(_,_).
 
@@ -67,17 +82,24 @@ winner(position(_,B,_), black) :- king_alive(B).
 change(Old,Color,From,To,New):-
 	get_half(Old,Half,Color),
 	exist(From,Half,Type),
+<<<<<<< HEAD
 	remove(From,List,Templist),
 	update_half(Old,Newhalf,Color,New).
+=======
+>>>>>>> 2d339436388d4019969597424504f7941ee349a4
 
 % true if there is a piece in the Field and kill it
 kill(Old,Color,Field,New):- 
 	get_half(Old,Half,Color),
 	exist(Field,Half,Type),
+<<<<<<< HEAD
 	remove(Field,List,Newlist),
 	update_half(Old,Newhalf,Color,New).
 	
 	
+=======
+
+>>>>>>> 2d339436388d4019969597424504f7941ee349a4
 %****************************************************************
 %	Move Predicates
 %****************************************************************
@@ -97,15 +119,6 @@ check_00(Old,black,85,83,New) :-
 	change(Old,black,81,84,New),!.
 check_00(Old,_,_,_,Old).
 
-% make_move: get New position from Old position and Move,
-make_move(Color,Old,move(From,To),New,hit):-
-	invert(Color,Oppo),
-	kill(Old,Oppo,To,Temp),
-	change(Temp,Color,From,To,New),!.
-make_move(Color,Old,move(From,To),New,nohit):-
-	check_00(Old,Color,From,To,Temp),
-	change(Temp,Color,From,To,New),!.
-
 % check_legal : check if Move is legal, Move e.g. from(Pos1,Pos2)
 check_legal(Move,Color,Position):-
 	generate(PosMove,Color,Position,_,_),
@@ -114,7 +127,6 @@ check_legal(Move,Color,Position):-
 % generate: move(From,To), Old: old position, Hit:
 generate(Move,Color,Old,New,Hit):-
 	all_moves(Color,Old,Move),
-	make_move(Color,Old,Move,New,Hit).
 
 
 %****************************************************************

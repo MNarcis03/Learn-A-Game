@@ -14,7 +14,6 @@ multiple_steps(Field,Direction,Next,Color,Position):-
 	one_step(Field,Direction,Next,Color,Position).
 multiple_steps(Field,Direction,Next,Color,Position):-
 	one_step(Field,Direction,FieldNew,Color,Position),
-	invert(Color,Oppo),
 	get_half(Position,HalfOppo,Oppo),
 	not(exist(FieldNew,HalfOppo,_)),
 	multiple_steps(FieldNew,Direction,Next,Color,Position).
@@ -23,9 +22,6 @@ multiple_steps(Field,Direction,Next,Color,Position):-
 get_half(position(Half,_,_),Half,white).
 get_half(position(_,Half,_),Half,black).
 
-% update_half: update half position
-update_half(position(_,Y,Z),Half,white,position(Half,Y,Z)).
-update_half(position(X,_,Z),Half,black,position(X,Half,Z)).
 
 % occupied: true if there is a piece in the Field
 occupied(Field,white,position(Stones,_,_)):- exist(Field,Stones,_).	

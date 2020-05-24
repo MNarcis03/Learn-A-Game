@@ -74,8 +74,3 @@ get(Move,Value,Depth) :-
 get_0(Move,Value) :-
 	top(Top),
 	stack(Move,Value,Top),!.
-	
-replace(Move,Value) :-	
-	top(Top),
-	retract(stack(_,_,Top)),
-	asserta(stack(Move,Value,Top)),!.
