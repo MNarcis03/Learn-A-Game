@@ -1,264 +1,219 @@
+% *********************************
+% utility predicates
+% *********************************
 
-:- [utils].	
-<<<<<<< HEAD
-:- [piece_rule].	
-=======
-:- [piece_rule].
-
->>>>>>> 2d339436388d4019969597424504f7941ee349a4
-
-%****************************************************************
-%	Game Control Predicates
-%****************************************************************
-
-% enter: given Position and Color, return a move
-enter(Position,Color,Move) :-
-	repeat,
-	read_move(Move,Color),
-	(	
-		check_legal(Move,Color,Position),
-		nl,!
-	;
-		write('Illegal Move!'),
-		nl,fail
-	).
-<<<<<<< HEAD
-enter(Position,Color,Move) :-
-	write_move(Move,Color),!.
-=======
->>>>>>> 2d339436388d4019969597424504f7941ee349a4
+% invalid_field(X): X is invalid position
+invalid_field(X):-
+	X =< 10,!.
+invalid_field(X):-
+	X >= 89,!.
+invalid_field(X):-
+	0 is X mod 10,!.
+invalid_field(X):-
+	9 is X mod 10,!.
 	
-% play: chess main loop, Start and Opposite take turns
-play(BasicPosition,Start) :-
-	asserta(board(BasicPosition,Start)),    % execute only once
-	nl,
-	draw_board(BasicPosition),
-	write('Enter moves like <d2d4.>'),nl,
-	write('Enter <exit.> to quit'),nl,
-	nl,
-	repeat,
-	retract(board(Position,Color)),         % read last Position status and color in action
-	( 
-		are_kings_alive(Position) ->
-<<<<<<< HEAD
-		enter(Position,Color,Move),
-		make_move(Color,Position,Move,New,_),
-		draw_board(New),
-		invert(Color,Op),
-		asserta(board(New,Op)),               % store current Position status and opposite color
-		fail
-	;
-		write_winner(Position),
-		!, fail
-=======
-		write_move(Move,Color),
-		;
-		!, fail % punem aici functia care face afisarea
+% exist: check if there is a piece of certain half in the field
+exist(Field,half_position(X,_,_,_,_,_,_),pawn):-
+	member(Field,X).
+exist(Field,half_position(_,X,_,_,_,_,_),rook):-
+	member(Field,X).
+exist(Field,half_position(_,_,X,_,_,_,_),knight):-
+	member(Field,X).
+exist(Field,half_position(_,_,_,X,_,_,_),bishop):-
+	member(Field,X).
+exist(Field,half_position(_,_,_,_,X,_,_),queen):-
+	member(Field,X).
+exist(Field,half_position(_,_,_,_,_,X,_),king):-
+	member(Field,X).
 
->>>>>>> 2d339436388d4019969597424504f7941ee349a4
-	).
-play(_,_).
+% invert: between black and white
+invert(F1,F2):-
+	F1 = black,
+	F2 = white.
+invert(F1,F2):-
+	F1 = white,
+	F2 = black.
 
-king_alive(half_position(_,_,_,_,_,K,_)) :-
-	length(K,1).
+% *******************************************
+% predecates for generating new moves
+% *******************************************
 
-write_winner(Position) :-
-	write('GAME ENDED'), nl,
-	winner(Position,Winner),
-	write(Winner), write(' wins'), nl.
+% one_step: from Field to Next through one step
+one_step(Field,Direction,Next,Color,Position):-	
+	Next is Field + Direction,
+	not(invalid_field(Next)),
+	not(occupied(Next,Color,Position)).
 
-are_kings_alive(position(W,B,_)) :-
-	king_alive(W),
-	king_alive(B).
-
-winner(position(W,_,_), white) :- king_alive(W).
-winner(position(_,B,_), black) :- king_alive(B).
+% multiple_steps: from Field to Next through one or multiple steps
+multiple_steps(Field,Direction,Next,Color,Position):-
+	one_step(Field,Direction,Next,Color,Position).
+multiple_steps(Field,Direction,Next,Color,Position):-
+	one_step(Field,Direction,FieldNew,Color,Position),
+	invert(Color,Oppo),
+	get_half(Position,HalfOppo,Oppo),
+	not(exist(FieldNew,HalfOppo,_)),
+	multiple_steps(FieldNew,Direction,Next,Color,Position).
 	
-%****************************************************************
-%	Board Predicates
-%****************************************************************
+% get_half: get half position for one side
+get_half(position(Half,_,_),Half,white).
+get_half(position(_,Half,_),Half,black).
 
-% true if a piece is in From and moves to To
-change(Old,Color,From,To,New):-
-	get_half(Old,Half,Color),
-	exist(From,Half,Type),
-<<<<<<< HEAD
-	remove(From,List,Templist),
-	update_half(Old,Newhalf,Color,New).
-=======
->>>>>>> 2d339436388d4019969597424504f7941ee349a4
+% update_half: update half position
+update_half(position(_,Y,Z),Half,white,position(Half,Y,Z)).
+update_half(position(X,_,Z),Half,black,position(X,Half,Z)).
 
-% true if there is a piece in the Field and kill it
-kill(Old,Color,Field,New):- 
-	get_half(Old,Half,Color),
-	exist(Field,Half,Type),
-<<<<<<< HEAD
-	remove(Field,List,Newlist),
-	update_half(Old,Newhalf,Color,New).
+% occupied: true if there is a piece in the Field
+occupied(Field,white,position(Stones,_,_)):- exist(Field,Stones,_).	
+occupied(Field,black,position(_,Stones,_)):- exist(Field,Stones,_).	
+
+% unoccupied: true if the position is valid and not occupied by any piece
+unoccupied(Field,Position):-
+	not(occupied(Field,white,Position)),
+	not(occupied(Field,black,Position)),
+	not(invalid_field(Field)).
+
+% poss_move: (piece, move value)
+poss_move(rook,10).
+poss_move(rook,-10).
+poss_move(rook,1).
+poss_move(rook,-1).
+poss_move(bishop,9).
+poss_move(bishop,11).
+poss_move(bishop,-9).
+poss_move(bishop,-11).
+poss_move(knight,19).
+poss_move(knight,21).
+poss_move(knight,8).
+poss_move(knight,12).
+poss_move(knight,-8).
+poss_move(knight,-12).
+poss_move(knight,-19).
+poss_move(knight,-21).
+poss_move(queen,X):-
+	poss_move(rook,X).
+poss_move(queen,X):-
+	poss_move(bishop,X).
+poss_move(king,X):-
+	poss_move(queen,X).
 	
-	
-=======
+% pawn_move: rules of pawn's possible move		
+pawn_move(From,white,Position,To):-
+	To  is  From + 9,
+	occupied(To,black,Position).
+pawn_move(From,white,Position,To):-
+	To  is  From + 10,
+	unoccupied(To,Position).
+pawn_move(From,white,Position,To):-
+	To  is  From + 11,
+	occupied(To,black,Position).
+pawn_move(From,white,Position,To):-
+	To  is  From + 20,
+	Over  is  From + 10,
+	unoccupied(To,Position),
+	unoccupied(Over,Position),
+	Row  is  From // 10,
+	Row = 2.
+pawn_move(From,black,Position,To):-
+	To  is  From - 9,
+	occupied(To,white,Position).
+pawn_move(From,black,Position,To):-
+	To  is  From - 10,
+	unoccupied(To,Position).
+pawn_move(From,black,Position,To):-
+	To  is  From - 11,
+	occupied(To,white,Position).
+pawn_move(From,black,Position,To):-
+	To  is  From - 20,
+	Over  is  From - 10,
+	unoccupied(To,Position),
+	unoccupied(Over,Position),
+	Row  is  From // 10,
+	Row = 7.
 
->>>>>>> 2d339436388d4019969597424504f7941ee349a4
-%****************************************************************
-%	Move Predicates
-%****************************************************************
-
-% castling
-check_00(Old,white,15,17,New) :-
-	Old=position(half_position(_,_,_,_,_,[15],_),_,_),
-	change(Old,white,18,16,New),!.
-check_00(Old,white,15,13,New) :-
-	Old=position(half_position(_,_,_,_,_,[15],_),_,_),
-	change(Old,white,11,14,New),!.
-check_00(Old,black,85,87,New) :-
-	Old=position(_,half_position(_,_,_,_,_,[85],_),_),
-	change(Old,black,88,86,New),!.
-check_00(Old,black,85,83,New) :-
-	Old=position(_,half_position(_,_,_,_,_,[85],_),_),
-	change(Old,black,81,84,New),!.
-check_00(Old,_,_,_,Old).
-
-% check_legal : check if Move is legal, Move e.g. from(Pos1,Pos2)
-check_legal(Move,Color,Position):-
-	generate(PosMove,Color,Position,_,_),
-	Move = PosMove,!.
-
-% generate: move(From,To), Old: old position, Hit:
-generate(Move,Color,Old,New,Hit):-
-	all_moves(Color,Old,Move),
-
-
-%****************************************************************
-%	UI Predicates
-%****************************************************************
-
-% read_move: read input from user
-read_move(move(From,To),Color):-
-	repeat,
-	% write("Your move: <"),write(Color),write("> "),
-	write("Your move: "),
-	read(Input),
+% short castling
+castling_move(Color,Position,King,To):-
 	(
-	  	Input = 'exit',
-	  	halt
-	;
-	    name(Input,[A,B,C,D]),	% name("d2d4",[100, 50, 100, 52]) ascii:50-2,52-4,100-d
-	  	str_pos([A,B],From),
-	  	str_pos([C,D],To),!
-	;
-	  	write('Wrong format ( enter like <a1b2.> '),nl,
-	  	fail
-	).
+		Color=white, 
+		King=15
+		;
+		Color=black,
+		King=85
+	),
+	RookNew is King+1,
+	To is King+2,
+	Rook is King+3,
+	get_half(Position,half_position(_,Rookies,_,_,_,_,_),Color),
+	member(Rook,Rookies),
+	unoccupied(RookNew,Position),
+	unoccupied(To,Position).
 
-% pos e.g. 42 to str ["d","2"]
-str_pos([L,C],Pos):-
-	nonvar(Pos),	% Pos known
-	pos_no(Row,Col,Pos),
-	L is Col + 96,	% int to char
-	C is Row + 48,!.
-str_pos([L,C],Pos):-
-	Col is L - 96,	% char to int
-	Row is C - 48,
-	pos_no(Row,Col,Pos),!.
+% long castling
+castling_move(Color,Position,King,To):-
+	(
+		Color=white, 
+		King=15
+		;
+		Color=black,
+		King=85
+	),
+	RookNew is King-1,
+	To is King-2,
+	Blank is King-3,
+	Rook is King-5,
+	get_half(Position,half_position(_,Rookies,_,_,_,_,_),Color),
+	member(Rook,Rookies),
+	unoccupied(RookNew,Position),
+	unoccupied(To,Position),
+	unoccupied(Blank,Position).
 
-% pos e.g. (2,2) to no 22
-pos_no(Row,Col,N):-
-	nonvar(N),!,
-	Row is N // 10,
-	Col is N mod 10.
-pos_no(R,C,N):-
-	N  is  R*10 + C.
+% long_move: move for long distance
+long_move(From,Color,Typ,Position,To):-
+	poss_move(Typ,Direction),
+	multiple_steps(From,Direction,To,Color,Position).
 
-% write_move : print move to screen.
-write_move(move(From,To),Color):-
-	str_pos([A,B],From),
-	str_pos([C,D],To),
-	name(Move,[A,B,C,D]),
-	% write("My move: <"),write(Color),write("> "),
-	write("My move: "),
-	write(Move),nl,nl,!.
-	
-% draw_board: show current position
-draw_board(Position):-
-	Position = position(H1,H2,_),
-	generate_board(Board),
-	place_pieces(white,H1,Board,Board1),
-	place_pieces(black,H2,Board1,BoardNew),
-	write_board(BoardNew).
-write_board([R1,R2,R3,R4,R5,R6,R7,R8]):-
-	write("8"),write(R8),nl,
-	write("7"),write(R7),nl,
-	write("6"),write(R6),nl,
-	write("5"),write(R5),nl,
-	write("4"),write(R4),nl,
-	write("3"),write(R3),nl,
-	write("2"),write(R2),nl,
-	write("1"),write(R1),nl,
-	write("  a  b  c  d  e  f  g  h"),nl,nl.
-% generate_board: generate blank board
-generate_board([['  ','  ','  ','  ','  ','  ','  ','  '],
-				['  ','  ','  ','  ','  ','  ','  ','  '],
-				['  ','  ','  ','  ','  ','  ','  ','  '],
-				['  ','  ','  ','  ','  ','  ','  ','  '],
-				['  ','  ','  ','  ','  ','  ','  ','  '],
-				['  ','  ','  ','  ','  ','  ','  ','  '],
-				['  ','  ','  ','  ','  ','  ','  ','  '],
-				['  ','  ','  ','  ','  ','  ','  ','  ']]).
-% place_pieces: place pieces of half side on board
-place_pieces(white,Half,Board,BoardNew):-
-	Half = half_position(Pawn,Rook,Knight,Bishop,Queen,King,_),
-	place_piece('wP',Pawn,Board,Board1),
-	place_piece('wR',Rook,Board1,Board2),
-	place_piece('wN',Knight,Board2,Board3),
-	place_piece('wB',Bishop,Board3,Board4),
-	place_piece('wQ',Queen,Board4,Board5),
-	place_piece('wK',King,Board5,BoardNew),
-	!.
-place_pieces(black,Half,Board,BoardNew):-
-	Half = half_position(Pawn,Rook,Knight,Bishop,Queen,King,_),
-	place_piece('bP',Pawn,Board,Board1),
-	place_piece('bR',Rook,Board1,Board2),
-	place_piece('bN',Knight,Board2,Board3),
-	place_piece('bB',Bishop,Board3,Board4),
-	place_piece('bQ',Queen,Board4,Board5),
-	place_piece('bK',King,Board5,BoardNew),
-	!.
+% short_move: move for one step
+short_move(From,Color,Typ,Position,To):-
+	poss_move(Typ,Direction),
+	one_step(From,Direction,To,Color,Position).
 
-% place_piece: place all pieces of certain type
-place_piece(_,[],Board,Board).
-place_piece(Str,[Field|Fs],Board,BoardNew):-
-	pos_no(Row,Col,Field),
-	nth1(Row, Board, List),
-	replace(List,Col,Str,ListNew),
-	replace(Board,Row,ListNew,Board1),
-	place_piece(Str,Fs,Board1,BoardNew).
+% all_moves: generate all possible moves
+all_moves(Color,Position,move(From,To)):-
+	get_half(Position,half_position(Pawn,_,_,_,_,_,_),Color),
+	member(From,Pawn),		% From is Pawn
+	pawn_move(From,Color,Position,To).
+all_moves(Color,Position,move(From,To)):-
+	get_half(Position,half_position(_,Rookies,_,_,_,_,_),Color),
+	member(From,Rookies), 	% From is Rook
+	long_move(From,Color,rook,Position,To).
+all_moves(Color,Position,move(From,To)):-
+	get_half(Position,half_position(_,_,Knights,_,_,_,_),Color),
+	member(From,Knights),	% From is Knight
+	short_move(From,Color,knight,Position,To).
+all_moves(Color,Position,move(From,To)):-
+	get_half(Position,half_position(_,_,_,Bishies,_,_,_),Color),
+	member(From,Bishies),	% From is Bish
+	long_move(From,Color,bishop,Position,To).
+all_moves(Color,Position,move(From,To)):-
+	get_half(Position,half_position(_,_,_,_,Queenies,_,_),Color),
+	member(From,Queenies),	% From is Queen
+	long_move(From,Color,queen,Position,To).
+all_moves(Color,Position,move(King,To)):-
+	get_half(Position,half_position(_,_,_,_,_,[King],_),Color),
+	short_move(King,Color,king,Position,To).
+all_moves(Color,Position,move(King,To)):-
+	get_half(Position,half_position(_,_,_,_,_,[King],_),Color),
+	castling_move(Color,Position,King,To).
 
-% replace(ListOld, Index, ReplacedBy, ListNew)
-replace([_|T], 1, X, [X|T]).
-replace([H|T], I, X, [H|R]):- I > 1, NI is I-1, replace(T, NI, X, R), !.
-replace(L, _, _, L).
-				
-%****************************************************************
-%	Main Predicates
-%****************************************************************
-
-initial_pos(position(H1,H2,0)):-
+% test for generating moves
+move_gen_test:-
 	PawnWhite = [21,22,23,24,25,26,27,28],
-	H1 = half_position(PawnWhite,[11,18],[12,17],[13,16],[14],[15],notmoved),
 	PawnBlack = [71,72,73,74,75,76,77,78],
-	H2 = half_position(PawnBlack,[81,88],[82,87],[83,86],[84],[85],notmoved).
+	H1 = half_position(PawnWhite,[11,18],[12,17],[13,16],[14],[15],notmoved),
+	H2 = half_position(PawnBlack,[81,88],[82,87],[83,86],[84],[85],notmoved),
+	Position = position(H1,H2,0),
+	all_moves(white,Position,Move),
+	write(Move),nl,
+	fail.
 
 run:-
-	retractall(stack(_,_,_)),
-	retractall(top(_)),
-	retractall(human(_)),
-	retractall(depth(_)),
-	retractall(board(_,_)),
-
-	initial_pos(Position),
-	asserta(depth(2)),
-	init_stack,
-	play(Position,white),	% main circulation
-	closechess.	
-			
+	move_gen_test.		
