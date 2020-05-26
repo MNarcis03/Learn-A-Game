@@ -1,7 +1,35 @@
-poss_move(pawn, 10).
-poss_move(pawn, 11).
-poss_move(pawn, 20).
-poss_move(pawn, -9).
+pawn_move(From,white,Position,To):-
+	To is From + 10,
+	unoccupied(To, Position).
+pawn_move(From,white,Position,To):-
+	To is From + 11,
+	occupied(To, black, Position).
+pawn_move(From,white,Position,To):-
+	To is From + 20,
+	Over is From + 10,
+	unoccupied(To, Position),                                    
+	unoccupied(Over, Position),
+	Row is From // 10,
+	Row = 2.
+pawn_move(From,white,Position,To):-
+	To is From + 9,
+	occupied(To, black, Position).
+pawn_move(From,black,Position,To):-
+	To is From - 9,
+	occupied(To, white, Position).
+pawn_move(From,black,Position,To):-
+	To is From - 10,
+	unoccupied(To, Position).
+pawn_move(From,black,Position,To):-
+	To is From - 20,
+	Over is From - 10,
+	unoccupied(To, Position),                                    
+	unoccupied(Over, Position),
+	Row is From // 10,
+	Row = 2.
+pawn_move(From,black,Position,To):-
+	To is From - 11,
+	occupied(To, white, Position).
 poss_move(rook, 1).
 poss_move(rook, 10).
 poss_move(rook, -1).

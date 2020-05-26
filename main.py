@@ -151,11 +151,29 @@ def create_chess_rules(moves, attacks):
                     _format = "poss_move(king, {0}).\n".format(move)
                     fd.writelines(_format)
             elif "wP" == piece:
-                moves["wP"].union(moves["bP"])
-
                 for move in _moves:
-                    _format = "poss_move(pawn, {0}).\n".format(move)
-                    fd.writelines(_format)
+                    if 0 != move % 10:
+                        _format = "pawn_move(From,white,Position,To):-\n\tTo is From + {0},\n\toccupied(To, black, Position).\n".format(abs(move))
+                        fd.writelines(_format)
+                    elif 10 == move:
+                        _format = "pawn_move(From,white,Position,To):-\n\tTo is From + {0},\n\tunoccupied(To, Position).\n".format(abs(move))
+                        fd.writelines(_format)
+                    elif 20 == move:
+                        _format = "pawn_move(From,white,Position,To):-\n\tTo is From + {0},\n\tOver is From + 10,\n\tunoccupied(To, Position), \
+                                   \n\tunoccupied(Over, Position),\n\tRow is From // 10,\n\tRow = 2.\n".format(abs(move))
+                        fd.writelines(_format)
+            elif "bP" == piece:
+                for move in _moves:
+                    if 0 != move % 10:
+                        _format = "pawn_move(From,black,Position,To):-\n\tTo is From - {0},\n\toccupied(To, white, Position).\n".format(abs(move))
+                        fd.writelines(_format)
+                    elif 10 == move:
+                        _format = "pawn_move(From,black,Position,To):-\n\tTo is From - {0},\n\tunoccupied(To, Position).\n".format(abs(move))
+                        fd.writelines(_format)
+                    elif 20 == move:
+                        _format = "pawn_move(From,black,Position,To):-\n\tTo is From - {0},\n\tOver is From - 10,\n\tunoccupied(To, Position), \
+                                   \n\tunoccupied(Over, Position),\n\tRow is From // 10,\n\tRow = 2.\n".format(abs(move))
+                        fd.writelines(_format)
 
     return None
 

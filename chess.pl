@@ -344,7 +344,7 @@ replace([H|T], I, X, [H|R]):- I > 1, NI is I-1, replace(T, NI, X, R), !.
 replace(L, _, _, L).
 
 run:-
-	PawnWhite = [31,22,23,24,25,26,27,28],
+	PawnWhite = [21,22,23,24,25,26,27,28],
 	PawnBlack = [71,72,73,74,75,76,77,78],
 	H1 = half_position(PawnWhite,[11,18],[12,17],[13,16],[14],[15],notmoved),
 	H2 = half_position(PawnBlack,[81,88],[82,87],[83,86],[84],[85],notmoved),
