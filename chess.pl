@@ -68,10 +68,6 @@ multiple_steps(Field,Direction,Next,Color,Position):-
 get_half(position(Half,_,_),Half,white).
 get_half(position(_,Half,_),Half,black).
 
-% update_half: update half position
-update_half(position(_,Y,Z),Half,white,position(Half,Y,Z)).
-update_half(position(X,_,Z),Half,black,position(X,Half,Z)).
-
 % occupied: true if there is a piece in the Field
 occupied(Field,white,position(Stones,_,_)):- exist(Field,Stones,_).
 occupied(Field,black,position(_,Stones,_)):- exist(Field,Stones,_).
@@ -315,7 +311,7 @@ place_pieces(white,Half,Board,BoardNew):-
 	place_piece('wN',Knight,Board2,Board3),
 	place_piece('wB',Bishop,Board3,Board4),
 	place_piece('wQ',Queen,Board4,Board5),
-	place_piece('wQ',King,Board5,BoardNew),
+	place_piece('wK',King,Board5,BoardNew),
 	!.
 
 place_pieces(black,Half,Board,BoardNew):-
