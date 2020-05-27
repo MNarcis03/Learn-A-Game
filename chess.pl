@@ -1,6 +1,3 @@
-% *********************************
-% utility predicates
-% *********************************
 
 % invalid_field(X): X is invalid position
 invalid_field(X):-
@@ -43,9 +40,6 @@ invert(F1,F2):-
 	F1 = white,
 	F2 = black.
 
-% *******************************************
-% predecates for generating new moves
-% *******************************************
 
 % one_step: from Field to Next through one step
 one_step(Field,Direction,Next,Color,Position):-
